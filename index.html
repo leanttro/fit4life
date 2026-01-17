@@ -1,0 +1,1642 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fit4Life | Marmitas Inteligentes</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* --- CSS VARIABLES & RESET --- */
+        :root {
+            --primary: #66bb6a; /* Verde Folha */
+            --primary-dark: #388e3c;
+            --accent: #ff9800; /* Laranja Vibrante */
+            --bg-body: #f4f7f6;
+            --bg-card: #ffffff;
+            --text-main: #2d3436;
+            --text-light: #636e72;
+            --nav-height: 70px;
+            --radius: 16px;
+            --shadow: 0 4px 20px rgba(0,0,0,0.05);
+            --top-bar-height: 32px;
+            --pix-color: #32BCAD;
+            --whatsapp-color: #40c351; /* Tom ajustado conforme referência */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            padding-bottom: calc(var(--nav-height)); /* Ajustado para o rodapé */
+            padding-top: var(--top-bar-height);
+        }
+
+        /* --- TOP URGENCY BAR (MARQUEE) --- */
+        .urgency-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: var(--top-bar-height);
+            background: var(--accent); /* Fundo Laranja */
+            color: white; /* Texto Branco */
+            display: flex;
+            align-items: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            z-index: 1002;
+            overflow: hidden; /* Esconde o texto que sai da tela */
+            white-space: nowrap;
+        }
+
+        .marquee-track {
+            display: flex;
+            gap: 40px; /* Espaço entre as repetições */
+            animation: marquee 20s linear infinite;
+            padding-left: 20px;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); } /* Move para a esquerda */
+        }
+
+        /* --- HEADER (Transparente -> Branco no Scroll) --- */
+        header {
+            position: fixed;
+            top: var(--top-bar-height);
+            left: 0;
+            width: 100%;
+            background: transparent; /* Começa Transparente */
+            padding: 10px 20px;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: none; /* Sem sombra inicial */
+            height: 100px; /* Diminuído de 120px para 100px */
+            transition: background-color 0.3s ease, box-shadow 0.3s ease; /* Transição suave */
+        }
+
+        /* Classe ativada via JS ao rolar */
+        header.scrolled {
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Áreas do Header */
+        .header-left { display: flex; justify-content: flex-start; align-items: center; gap: 15px; }
+        .header-center { display: flex; justify-content: center; align-items: center; }
+        .header-right { display: flex; justify-content: flex-end; align-items: center; gap: 20px; }
+
+        /* Logo Centralizado (Com lógica de cor) */
+        .logo-img {
+            height: 75px; /* Diminuído de 90px para 75px */
+            width: auto;
+            display: block;
+            filter: brightness(0) invert(1); /* Deixa o logo BRANCO inicialmente */
+            transition: filter 0.3s ease;
+        }
+
+        /* Quando rolar, remove o filtro e mostra a cor real */
+        header.scrolled .logo-img {
+            filter: none;
+        }
+        
+        /* Ícones do Header */
+        .header-icon {
+            font-size: 1.3rem;
+            color: white; /* Começa BRANCO */
+            cursor: pointer;
+            transition: color 0.3s ease;
+            text-decoration: none;
+        }
+        
+        /* Quando rolar, muda para cor escura */
+        header.scrolled .header-icon {
+            color: var(--text-main);
+        }
+
+        .header-icon:hover { color: var(--primary); }
+        
+        .header-icon.whatsapp { color: white; }
+        header.scrolled .header-icon.whatsapp { color: var(--text-main); }
+        .header-icon.whatsapp:hover { color: var(--whatsapp-color); }
+
+        .cart-wrap { position: relative; cursor: pointer; }
+        .cart-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--accent);
+            color: white;
+            font-size: 0.7rem;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* --- SEARCH BAR (Correção: Invisível por padrão) --- */
+        .search-bar-container {
+            position: fixed;
+            top: calc(var(--top-bar-height) + 100px); /* Ajustado para 100px */
+            left: 0;
+            width: 100%;
+            background: white;
+            padding: 10px 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            z-index: 990;
+            
+            /* Estado Inicial: Escondido e Invisível */
+            transform: translateY(-150%);
+            opacity: 0;
+            visibility: hidden;
+            
+            transition: all 0.3s ease;
+        }
+        
+        .search-bar-container.active { 
+            transform: translateY(0); 
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #eee;
+            border-radius: 20px;
+            background: #f9f9f9;
+            font-family: inherit;
+            outline: none;
+        }
+
+        /* --- SIDEBAR MENU --- */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1005;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .sidebar-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .sidebar {
+            position: fixed;
+            top: 0; left: 0;
+            width: 280px;
+            height: 100%;
+            background: white;
+            z-index: 1006;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar.active { transform: translateX(0); }
+        
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .sidebar-menu a {
+            display: flex; align-items: center; gap: 15px;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .sidebar-menu a i { color: var(--primary); width: 25px; }
+
+        /* --- HERO SECTION (UPDATED SLIDER) --- */
+        .hero {
+            position: relative;
+            height: 50vh; /* Aumentado para 50vh */
+            margin-top: 0; /* Removido o margin-top para o banner ficar atrás do header */
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hero-slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .slide.active { opacity: 1; }
+
+        .hero-content { 
+            position: relative; 
+            z-index: 2; 
+            max-width: 500px; 
+            color: white; 
+            padding: 20px; 
+            text-align: center;
+            margin-top: 150px; /* Aumentado para baixar os botões */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        .hero h1 { font-size: 1.8rem; line-height: 1.2; margin-bottom: 15px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        
+        .slider-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.3);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: background 0.3s;
+        }
+        .slider-arrow:hover { background: rgba(0,0,0,0.6); }
+        .slider-arrow.prev { left: 10px; }
+        .slider-arrow.next { right: 10px; }
+
+        .btn-pulse {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7);
+            animation: pulse 2s infinite;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            width: fit-content;
+        }
+
+        .btn-whatsapp-hero {
+            background: var(--whatsapp-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+            transition: transform 0.2s;
+        }
+        .btn-whatsapp-hero:hover { transform: scale(1.05); }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(255, 152, 0, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 152, 0, 0); }
+        }
+
+        /* --- FEATURED KITS SECTION (NOVO) --- */
+        .featured-kits {
+            padding: 30px 20px 10px 20px;
+            background: white;
+        }
+        .section-header-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-left: 4px solid var(--accent);
+            padding-left: 10px;
+        }
+        .kits-scroll {
+            display: flex;
+            overflow-x: auto;
+            gap: 15px;
+            padding-bottom: 10px;
+            scrollbar-width: none; /* Firefox */
+        }
+        .kits-scroll::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+        .kit-card {
+            min-width: 260px;
+            background: var(--bg-body);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            position: relative;
+        }
+        .kit-img {
+            width: 100%;
+            height: 240px; /* Aumentado de 200px para 240px */
+            object-fit: cover;
+        }
+        .kit-info {
+            padding: 12px;
+        }
+        .kit-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 5px;
+        }
+        .kit-desc {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-bottom: 10px;
+        }
+        .kit-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .kit-price {
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+        .btn-kit-add {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* --- FILTERS --- */
+        .filters {
+            display: flex;
+            overflow-x: auto;
+            padding: 10px 45px 20px 45px; /* Ajuste padding */
+            gap: 10px;
+            scrollbar-width: none;
+            scroll-behavior: smooth;
+        }
+        .filters::-webkit-scrollbar { display: none; }
+        
+        .chip {
+            background: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            border: 1px solid #e0e0e0;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .chip.highlight { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+        .chip.highlight.active { background: var(--accent); color: white; }
+
+        /* --- FILTER NAV ARROWS --- */
+        .nav-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: white;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 5;
+            color: var(--primary);
+            transition: all 0.2s;
+        }
+        .nav-arrow:active { transform: translateY(-50%) scale(0.9); }
+        .nav-arrow.left { left: 10px; }
+        .nav-arrow.right { right: 10px; }
+
+        /* --- PRODUCTS GRID --- */
+        .grid-container {
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 15px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            position: relative;
+            transition: transform 0.2s;
+        }
+        .card:active { transform: scale(0.98); }
+
+        .card-img-wrap { position: relative; height: 140px; }
+        .card-img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .badges-container { position: absolute; bottom: 8px; left: 8px; display: flex; gap: 5px; }
+        .badge {
+            background: rgba(0,0,0,0.7);
+            color: white;
+            font-size: 0.6rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            backdrop-filter: blur(4px);
+            font-weight: 600;
+        }
+
+        .card-body { padding: 12px; }
+        .card-title { font-size: 0.95rem; font-weight: 600; margin-bottom: 5px; line-height: 1.3; }
+        .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+        .price { font-weight: 700; color: var(--primary-dark); font-size: 1rem; }
+        
+        .btn-add {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--bg-body);
+            border: 1px solid #e0e0e0;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-add:hover { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* --- FAQ SECTION (SLICERS) --- */
+        .faq-section {
+            padding: 30px 20px;
+            background: white;
+            margin-top: 30px;
+        }
+        .faq-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--primary-dark);
+            text-align: center;
+        }
+        .faq-item {
+            border-bottom: 1px solid #eee;
+            margin-bottom: 10px;
+        }
+        .faq-question {
+            width: 100%;
+            text-align: left;
+            background: none;
+            border: none;
+            padding: 15px 5px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        .faq-question i {
+            color: var(--primary);
+            transition: transform 0.3s;
+        }
+        .faq-item.active .faq-question i {
+            transform: rotate(180deg);
+        }
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            color: var(--text-light);
+            font-size: 0.85rem;
+            line-height: 1.5;
+            padding: 0 5px;
+        }
+        .faq-item.active .faq-answer {
+            padding-bottom: 15px;
+            max-height: 300px;
+        }
+
+        /* --- SOCIAL PROOF TOAST --- */
+        .social-toast {
+            position: fixed;
+            top: 115px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            padding: 10px 15px;
+            border-radius: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 940;
+            border: 1px solid rgba(0,0,0,0.05);
+            transform: translateX(150%);
+            transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+            max-width: 280px;
+        }
+        .social-toast.visible { transform: translateX(0); }
+        .toast-img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .toast-content { font-size: 0.7rem; line-height: 1.2; color: var(--text-main); }
+        .toast-content strong { color: var(--primary-dark); }
+        .toast-time { font-size: 0.65rem; color: #b2bec3; }
+        
+        /* --- USER ACTION TOAST (Novo) --- */
+        .user-action-toast {
+            position: fixed;
+            top: calc(var(--top-bar-height) + 120px);
+            left: 50%;
+            transform: translateX(-50%) translateY(-100%);
+            background: rgba(45, 52, 54, 0.95);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            z-index: 2000;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .user-action-toast.visible {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        .user-action-toast i { color: var(--primary); }
+
+        /* --- GAMIFICATION BAR --- */
+        .gamification-bar {
+            position: fixed;
+            bottom: var(--nav-height);
+            left: 100px; /* Ajuste para não conflitar com FAB */
+            right: 0;
+            width: auto;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+            z-index: 900;
+            transform: translateY(150%); 
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @media (max-width: 768px) {
+            .gamification-bar { left: 0; width: 100%; }
+        }
+
+        .gamification-bar.visible { transform: translateY(0); }
+        .gamification-bar.minimized { transform: translateY(100%); }
+        
+        .bar-handle {
+            position: absolute;
+            top: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 24px;
+            background: white;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 -3px 5px rgba(0,0,0,0.05);
+            cursor: pointer;
+            color: var(--text-light);
+            z-index: 901;
+        }
+        
+        .progress-info { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; font-weight: 600; }
+        .progress-track { width: 100%; height: 8px; background: #eee; border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
+        .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.5s ease; border-radius: 10px; }
+        
+        /* NOVO: Lista Horizontal de Itens Adicionados */
+        .cart-items-scroll {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 10px 0;
+            margin-bottom: 10px;
+            scrollbar-width: none; /* Firefox */
+        }
+        .cart-items-scroll::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+        
+        .mini-cart-item {
+            min-width: 80px;
+            max-width: 80px;
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 8px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            flex-shrink: 0;
+        }
+        .mini-cart-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 5px;
+            border: 1px solid #f0f0f0;
+        }
+        .mini-cart-price {
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: var(--primary-dark);
+            display: block;
+        }
+        .mini-cart-remove {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #ff7675;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            font-size: 0.65rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 2;
+        }
+        .mini-item-name {
+            font-size: 0.65rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            color: var(--text-main);
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .promo-text { font-size: 0.75rem; color: var(--text-light); margin-top: 5px; text-align: center; }
+        .promo-text strong { color: var(--accent); }
+
+        .btn-checkout {
+            display: none;
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-top: 10px;
+            animation: bounceIn 0.5s;
+        }
+        @keyframes bounceIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+        /* --- FOOTER --- */
+        footer {
+            background-color: #2d3436;
+            color: white;
+            padding: 40px 20px 80px 20px; /* Extra padding bottom for Nav */
+            font-size: 0.85rem;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-col h4 {
+            color: var(--primary);
+            font-size: 1rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .footer-links a {
+            display: block;
+            color: #b2bec3;
+            text-decoration: none;
+            margin-bottom: 8px;
+            transition: color 0.2s;
+        }
+        .footer-links a:hover { color: white; }
+
+        .payment-icons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+            align-items: center;
+        }
+        .payment-icons i {
+            font-size: 1.8rem;
+            color: #dfe6e9;
+        }
+        .payment-icons .fa-cc-visa { color: #1a1f71; background: white; border-radius: 4px; padding: 0 2px;}
+        .payment-icons .fa-cc-mastercard { color: #eb001b; background: white; border-radius: 4px; padding: 0 2px;}
+        
+        .vr-badge {
+            background: white;
+            color: #2d3436;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.7rem;
+            display: inline-block;
+        }
+        
+        .pix-badge {
+            background: var(--pix-color);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .social-icons { display: flex; gap: 15px; margin-top: 15px; }
+        .social-icons a { color: white; font-size: 1.2rem; transition: color 0.2s; }
+        .social-icons a:hover { color: var(--primary); }
+
+        .copyright {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #636e72;
+            color: #636e72;
+            font-size: 0.75rem;
+        }
+
+        /* --- BOTTOM NAV --- */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: var(--nav-height);
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid #eee;
+            z-index: 999;
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #b2bec3; font-size: 0.7rem; gap: 4px; text-decoration: none; }
+        .nav-item i { font-size: 1.2rem; }
+        .nav-item.active { color: var(--primary); font-weight: 600; }
+
+        /* --- NUTRI IA --- */
+        .nutri-fab {
+            position: fixed;
+            bottom: calc(var(--nav-height) + 20px);
+            right: 20px;
+            width: 55px;
+            height: 55px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 950;
+            cursor: pointer;
+            border: 2px solid var(--primary);
+            transition: bottom 0.4s;
+        }
+        .nutri-fab img { width: 30px; }
+        
+        .chat-modal {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 300px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+            z-index: 1100;
+            display: none;
+            overflow: hidden;
+            flex-direction: column;
+            border: 1px solid #eee;
+        }
+        .chat-header { background: var(--primary); color: white; padding: 12px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .chat-body { padding: 15px; font-size: 0.9rem; background: #fafafa; }
+        .chat-bubble { background: white; padding: 10px; border-radius: 0 12px 12px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #eee; }
+        .close-chat { margin-left: auto; cursor: pointer; }
+
+    </style>
+</head>
+<body>
+
+    <div class="urgency-bar">
+        <div class="marquee-track">
+            <span>DESCONTOS PARA PAGAMENTO EM PIX</span>
+            <span>•</span>
+            <span>DESCONTOS PARA PAGAMENTO EM PIX</span>
+            <span>•</span>
+            <span>DESCONTOS PARA PAGAMENTO EM PIX</span>
+            <span>•</span>
+            <span>DESCONTOS PARA PAGAMENTO EM PIX</span>
+            <span>•</span>
+            <span>DESCONTOS PARA PAGAMENTO EM PIX</span>
+            <span>•</span>
+            <span>DESCONTOS PARA PAGAMENTO EM PIX</span>
+            <span>•</span>
+            <span>DESCONTOS PARA PAGAMENTO EM PIX</span>
+            <span>•</span>
+            <span>DESCONTOS PARA PAGAMENTO EM PIX</span>
+            <span>•</span>
+            <span>DESCONTOS PARA PAGAMENTO EM PIX</span>
+            <span>•</span>
+            <span>DESCONTOS PARA PAGAMENTO EM PIX</span>
+        </div>
+    </div>
+
+    <header>
+        <div class="header-left">
+            <i class="fa-solid fa-bars header-icon" onclick="toggleMenu()"></i>
+            <a href="https://wa.me/5511957860887" target="_blank" class="header-icon whatsapp">
+                <i class="fa-brands fa-whatsapp"></i>
+            </a>
+        </div>
+        
+        <div class="header-center">
+            <img src="img/logo.png" alt="Fit4Life" class="logo-img">
+        </div>
+
+        <div class="header-right">
+            <i class="fa-solid fa-magnifying-glass header-icon" onclick="toggleSearch()"></i>
+            <div class="cart-wrap">
+                <i class="fa-solid fa-bag-shopping header-icon"></i>
+                <span class="cart-badge" id="cart-count">0</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="search-bar-container" id="search-bar">
+        <input type="text" class="search-input" placeholder="O que você quer comer hoje?">
+    </div>
+    
+    <div class="user-action-toast" id="user-action-toast">
+        <i class="fa-solid fa-check-circle"></i>
+        <span id="user-toast-msg">Item adicionado</span>
+    </div>
+
+    <div class="kit-modal-overlay" id="kit-modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; justify-content:center; align-items:center;">
+        <div style="background:white; padding:25px; border-radius:12px; width:90%; max-width:320px; text-align:center; box-shadow:0 4px 20px rgba(0,0,0,0.2);">
+            <i class="fa-solid fa-check-circle" style="color:var(--primary); font-size:3.5rem; margin-bottom:15px;"></i>
+            <h3 style="margin-bottom:10px; color:var(--text-main); font-size:1.2rem;">Ótima escolha!</h3>
+            <p style="color:var(--text-light); margin-bottom:25px; font-size:0.9rem; line-height:1.5;">Você adicionou um Kit. O que deseja fazer agora?</p>
+            <button onclick="closeKitModal(true)" style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:8px; font-weight:bold; margin-bottom:10px; cursor:pointer; font-size:0.95rem;">Ir para o Carrinho</button>
+            <button onclick="closeKitModal(false)" style="width:100%; padding:12px; background:transparent; color:var(--text-light); border:1px solid #ddd; border-radius:8px; font-weight:bold; cursor:pointer; font-size:0.9rem;">Continuar Comprando</button>
+        </div>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleMenu()"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3 style="color:var(--primary-dark)">Menu</h3>
+            <i class="fa-solid fa-xmark header-icon" onclick="toggleMenu()" style="color:var(--text-main)"></i>
+        </div>
+        <div class="sidebar-menu">
+            <a href="#"><i class="fa-solid fa-user"></i> Minha Conta</a>
+            <a href="#"><i class="fa-solid fa-box-open"></i> Meus Pedidos</a>
+            <a href="#"><i class="fa-solid fa-heart"></i> Favoritos</a>
+            <a href="#"><i class="fa-solid fa-leaf"></i> Assinaturas</a>
+            <a href="#"><i class="fa-solid fa-circle-question"></i> Ajuda</a>
+        </div>
+    </div>
+
+    <div class="social-toast" id="social-toast">
+        <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" alt="User" class="toast-img" id="toast-img">
+        <div class="toast-content">
+            <div id="toast-msg"><strong>Ana C.</strong> comprou<br>Kit Semanal Low Carb</div>
+            <div class="toast-time">Há 2 minutos</div>
+        </div>
+    </div>
+
+    <section class="hero">
+        <div class="hero-slider" id="hero-slider">
+            <div class="slide active" style="background-image: url('img/banner1.png');"></div>
+            <div class="slide" style="background-image: url('img/banner2.png');"></div>
+            <div class="slide" style="background-image: url('img/banner3.png');"></div>
+        </div>
+
+        <button class="slider-arrow prev" onclick="changeSlide(-1)">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <button class="slider-arrow next" onclick="changeSlide(1)">
+            <i class="fa-solid fa-chevron-right"></i>
+        </button>
+
+        <div class="hero-content">
+            <a href="https://wa.me/5511957860887" target="_blank" class="btn-whatsapp-hero">
+                <i class="fa-brands fa-whatsapp"></i> Pedir no WhatsApp
+            </a>
+        </div>
+    </section>
+
+    <section class="featured-kits">
+        <h2 class="section-header-title">Kits em Destaque</h2>
+        <div style="position: relative; width: 100%;">
+            <button class="nav-arrow left" onclick="scrollKits(-1)">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <div class="kits-scroll" id="kits-container">
+                
+                <div class="kit-card">
+                    <img src="https://res.cloudinary.com/dzcaxmbjn/image/upload/v1768662063/064306db-0024-4c70-a314-d79f3524efd5.png" class="kit-img" alt="Kit Emagrecimento">
+                    <div class="kit-info">
+                        <div class="kit-title">Emagrecimento 7 Dias</div>
+                        <div class="kit-desc">14 Refeições (Almoço + Jantar) focado em perda de peso.</div>
+                        <div class="kit-footer">
+                            <span class="kit-price">R$ 185,90</span>
+                            <button class="btn-kit-add" onclick="addToCart('Emagrecimento 7 Dias', 185.90, 'kits', 'https://res.cloudinary.com/dzcaxmbjn/image/upload/v1768662063/064306db-0024-4c70-a314-d79f3524efd5.png')">Adicionar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kit-card">
+                    <img src="https://res.cloudinary.com/dzcaxmbjn/image/upload/v1768662155/bfed3b09-47ab-46e6-90b1-91ebae792edd.png" class="kit-img" alt="Kit Low Carb">
+                    <div class="kit-info">
+                        <div class="kit-title">Low Carb Turbo</div>
+                        <div class="kit-desc">7 Refeições com baixo carboidrato para secar rápido.</div>
+                        <div class="kit-footer">
+                            <span class="kit-price">R$ 199,90</span>
+                            <button class="btn-kit-add" onclick="addToCart('Low Carb Turbo', 199.90, 'kits', 'https://res.cloudinary.com/dzcaxmbjn/image/upload/v1768662155/bfed3b09-47ab-46e6-90b1-91ebae792edd.png')">Adicionar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kit-card">
+                    <img src="https://res.cloudinary.com/dzcaxmbjn/image/upload/v1768686061/c9d6edbc-afae-4552-b0e1-7bb38b0c5c3d.png" class="kit-img" alt="Kit Massa Muscular">
+                    <div class="kit-info">
+                        <div class="kit-title">Ganho de Massa</div>
+                        <div class="kit-desc">Hiperproteico: 10 refeições com +30g de proteína.</div>
+                        <div class="kit-footer">
+                            <span class="kit-price">R$ 249,90</span>
+                            <button class="btn-kit-add" onclick="addToCart('Ganho de Massa', 249.90, 'kits', 'https://res.cloudinary.com/dzcaxmbjn/image/upload/v1768662200/e4917f13-7846-49d3-8313-65770a0613f4.png')">Adicionar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kit-card">
+                    <img src="https://res.cloudinary.com/dzcaxmbjn/image/upload/v1768687510/13e9d43b-c3c8-4054-8bbf-25e2047b6b9d.png" class="kit-img" alt="Kit 7 Sopas">
+                    <div class="kit-info">
+                        <div class="kit-title">Kit 7 Sopas Detox</div>
+                        <div class="kit-desc">7 Sopas nutritivas e leves para jantar leve ou detox.</div>
+                        <div class="kit-footer">
+                            <span class="kit-price">R$ 144,90</span>
+                            <button class="btn-kit-add" onclick="addToCart('Kit 7 Sopas Detox', 144.90, 'kits', 'https://images.unsplash.com/photo-1547592166-23acbe34071b?ixlib=rb-4.0.3&w=500&q=80')">Adicionar</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <button class="nav-arrow right" onclick="scrollKits(1)">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        </div>
+    </section>
+
+    <div style="padding: 20px 20px 0 20px; background: #f4f7f6;">
+        <h2 class="section-header-title" style="margin-bottom: 0;">DIA A DIA</h2>
+    </div>
+
+    <div style="position: relative; width: 100%;">
+        <button class="nav-arrow left" onclick="scrollFilters(-1)">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        
+        <div class="filters" id="filters-container">
+            <div class="chip active" onclick="filterItems('todos', this)">Todos</div>
+            <div class="chip" onclick="filterItems('kits', this)">Kits Semanais</div>
+            <div class="chip" onclick="filterItems('marmitas', this)">Marmitas</div>
+            <div class="chip" onclick="filterItems('sopas', this)">Sopas & Caldos</div>
+            <div class="chip" onclick="filterItems('lowcarb', this)">Low Carb</div>
+            <div class="chip highlight" onclick="filterItems('vr', this)"><i class="fa-solid fa-ticket"></i> Aceita VA/VR</div>
+            <div class="chip" onclick="filterItems('doces', this)">Doces Fit</div>
+            <div class="chip" onclick="filterItems('bebidas', this)">Sucos Detox</div>
+        </div>
+
+        <button class="nav-arrow right" onclick="scrollFilters(1)">
+            <i class="fa-solid fa-chevron-right"></i>
+        </button>
+    </div>
+
+    <div class="grid-container" id="products-grid">
+        </div>
+
+    <section class="faq-section">
+        <div class="faq-title">Dúvidas Frequentes</div>
+        
+        <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">
+                Como funciona a entrega?
+                <i class="fa-solid fa-chevron-down"></i>
+            </button>
+            <div class="faq-answer">
+                Nossas entregas são agendadas! Para pedidos feitos até as 11h, conseguimos entregar no mesmo dia em algumas regiões de SP. Caso contrário, agendamos para o dia seguinte no horário de sua preferência.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">
+                As marmitas vêm congeladas?
+                <i class="fa-solid fa-chevron-down"></i>
+            </button>
+            <div class="faq-answer">
+                Sim! Todas as nossas marmitas são ultracongeladas para manter o sabor e os nutrientes. Elas duram até 90 dias no freezer.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">
+                Quais as formas de pagamento?
+                <i class="fa-solid fa-chevron-down"></i>
+            </button>
+            <div class="faq-answer">
+                Aceitamos Pix com desconto, cartões de crédito (Visa, Master, Amex, Elo), e vale-refeição (VR, VA, Sodexo, Alelo e Ticket).
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">
+                Como aquecer as refeições?
+                <i class="fa-solid fa-chevron-down"></i>
+            </button>
+            <div class="faq-answer">
+                É super prático! Basta retirar a tampa e levar ao micro-ondas por aproximadamente 5 a 7 minutos (o tempo pode variar conforme a potência do aparelho).
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-col">
+                <div class="logo" style="margin-bottom: 15px;">Fit<span>4Life</span></div>
+                <p style="color: #b2bec3; line-height: 1.6;">
+                    Alimentação saudável, prática e saborosa entregue na sua porta. Transforme seu estilo de vida sem esforço.
+                </p>
+                <div class="social-icons">
+                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#"><i class="fa-brands fa-facebook"></i></a>
+                    <a href="#"><i class="fa-brands fa-whatsapp"></i></a>
+                </div>
+            </div>
+
+            <div class="footer-col">
+                <h4>Institucional</h4>
+                <div class="footer-links">
+                    <a href="#">Sobre Nós</a>
+                    <a href="#">Como Funciona</a>
+                    <a href="#">Entregas e Prazos</a>
+                    <a href="#">Política de Privacidade</a>
+                    <a href="#">Trabalhe Conosco</a>
+                </div>
+            </div>
+
+            <div class="footer-col">
+                <h4>Pagamento</h4>
+                <p style="color: #b2bec3; margin-bottom: 10px;">Aceitamos as principais bandeiras e benefícios:</p>
+                <div class="payment-icons">
+                    <i class="fa-brands fa-cc-visa"></i>
+                    <i class="fa-brands fa-cc-mastercard"></i>
+                    <i class="fa-brands fa-cc-amex"></i>
+                    <i class="fa-solid fa-credit-card"></i>
+                    <div class="pix-badge">
+                        <i class="fa-brands fa-pix"></i> PIX
+                    </div>
+                    <span class="vr-badge">VR</span>
+                    <span class="vr-badge">VA</span>
+                    <span class="vr-badge">Sodexo</span>
+                    <span class="vr-badge">Alelo</span>
+                </div>
+            </div>
+
+            <div class="footer-col">
+                <h4>Contato</h4>
+                <div class="footer-links">
+                    <a href="#"><i class="fa-regular fa-envelope"></i> contato@fit4lifefood.com.br</a>
+                    <a href="#"><i class="fa-brands fa-whatsapp"></i> (11) 99999-9999</a>
+                    <span style="display:block; color:#b2bec3; margin-top:10px;">CNPJ: 00.000.000/0001-00</span>
+                    <span style="display:block; color:#b2bec3;">São Paulo - SP</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="copyright">
+            &copy; 2025 Fit4Life Food. Todos os direitos reservados.
+        </div>
+    </footer>
+
+    <div class="gamification-bar" id="game-bar">
+        <div class="bar-handle" onclick="toggleBar()">
+            <i class="fa-solid fa-chevron-down" id="bar-icon"></i>
+        </div>
+
+        <div class="progress-info">
+            <span id="kit-status">Monte seu Kit Semanal (0/7)</span>
+            <span id="kit-total">R$ 0,00</span>
+        </div>
+        <div class="progress-track">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        
+        <div class="cart-items-scroll" id="cart-items-scroll">
+            </div>
+
+        <p class="promo-text" id="promo-text">Faltam <strong>7 marmitas</strong> para ativar o Frete Grátis!</p>
+        <button class="btn-checkout" id="btn-checkout">FECHAR PEDIDO (FRETE GRÁTIS)</button>
+    </div>
+
+    <div class="nutri-fab" onclick="toggleChat()">
+        <i class="fa-solid fa-robot" style="color: var(--primary); font-size: 1.5rem;"></i>
+    </div>
+
+    <div class="chat-modal" id="chat-modal">
+        <div class="chat-header">
+            <i class="fa-solid fa-robot"></i> Nutri Virtual
+            <i class="fa-solid fa-xmark close-chat" onclick="toggleChat()"></i>
+        </div>
+        <div class="chat-body">
+            <div class="chat-bubble">
+                Olá! Sou a Nutri IA. Percebi que você ainda não escolheu nada. Seu objetivo é emagrecer ou ganhar massa? 🥗
+            </div>
+            <div style="margin-top: 10px; display: flex; gap: 5px;">
+                <button style="padding: 5px 10px; border: 1px solid #ccc; background: white; border-radius: 4px; font-size: 0.8rem;">Emagrecer</button>
+                <button style="padding: 5px 10px; border: 1px solid #ccc; background: white; border-radius: 4px; font-size: 0.8rem;">Massa</button>
+            </div>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="#" class="nav-item active">
+            <i class="fa-solid fa-house"></i>
+            <span>Início</span>
+        </a>
+        <a href="#" class="nav-item">
+            <i class="fa-solid fa-utensils"></i>
+            <span>Cardápio</span>
+        </a>
+        <a href="#" class="nav-item">
+            <i class="fa-solid fa-box-open"></i>
+            <span>Kits</span>
+        </a>
+        <a href="#" class="nav-item">
+            <i class="fa-regular fa-user"></i>
+            <span>Perfil</span>
+        </a>
+    </nav>
+
+    <script>
+        // --- DATA (DADOS REAIS DA FIT4LIFE - URLs placeholder) ---
+        // IMPORTANTE: Copie o endereço da imagem do site e cole dentro das aspas em 'img'
+        const products = [
+            // KITS
+            { 
+                id: 1, 
+                name: "Promo Fit Almoço - 7 Dias", 
+                price: 185.90, 
+                img: "https://res.cloudinary.com/dzcaxmbjn/image/upload/v1768662063/064306db-0024-4c70-a314-d79f3524efd5.png", // Substitua esta URL 
+                category: "kits", 
+                badge: "7 Refeições" 
+            },
+            { 
+                id: 2, 
+                name: "Emagrecimento Low Carb - 7 Ref", 
+                price: 199.90, 
+                img: "https://res.cloudinary.com/dzcaxmbjn/image/upload/v1768662155/bfed3b09-47ab-46e6-90b1-91ebae792edd.png", // Substitua esta URL
+                category: "kits", 
+                badge: "Perda de Peso" 
+            },
+            
+            // LOW CARB & LANÇAMENTOS
+            { 
+                id: 3, 
+                name: "Salmão com Páprica e Purê", 
+                price: 38.90, 
+                img: "https://res.cloudinary.com/dzcaxmbjn/image/upload/v1768662200/e4917f13-7846-49d3-8313-65770a0613f4.png", // Substitua esta URL
+                category: "lowcarb", 
+                badge: "Ômega 3" 
+            },
+            { 
+                id: 4, 
+                name: "Lasanha de Berinjela c/ Patinho", 
+                price: 28.90, 
+                img: "https://res.cloudinary.com/dzcaxmbjn/image/upload/v1768662324/431e9d8e-f388-4b06-b438-cb507df2c565.png", // Substitua esta URL
+                category: "lowcarb", 
+                badge: "Baixo Carbo" 
+            },
+
+            // MARMITAS GERAIS / LANÇAMENTOS
+            { 
+                id: 5, 
+                name: "Carne Desfiada com Purê", 
+                price: 28.90, 
+                img: "https://res.cloudinary.com/dzcaxmbjn/image/upload/v1768662588/fd255c5d-f084-4c3a-a610-81245478f0b2.png", // Substitua esta URL
+                category: "lancamentos", 
+                badge: "Top Vendas" 
+            },
+            { 
+                id: 6, 
+                name: "Fricassê de Frango Fit", 
+                price: 28.90, 
+                img: "https://res.cloudinary.com/dzcaxmbjn/image/upload/v1768662647/8c542fda-0940-4a5f-a943-f9bcca5ed54e.png", // Substitua esta URL
+                category: "lancamentos", 
+                badge: "Cremoso" 
+            },
+
+            // ESCONDIDINHOS
+            { 
+                id: 7, 
+                name: "Escondidinho de Patinho c/ Abóbora", 
+                price: 28.90, 
+                img: "https://res.cloudinary.com/dzcaxmbjn/image/upload/v1768662687/c2599059-9698-4820-80ff-c6185bba9971.png", // Substitua esta URL
+                category: "escondidinho", 
+                badge: "Proteico" 
+            },
+
+            // SOPAS
+            { 
+                id: 8, 
+                name: "Creme de Abóbora Funcional", 
+                price: 22.90, 
+                img: "https://res.cloudinary.com/dzcaxmbjn/image/upload/v1768662807/5bc56511-0490-4fbe-b18f-7a498ede3b68.png", // Substitua esta URL
+                category: "sopas", 
+                badge: "Detox" 
+            },
+
+            // MASSAS
+            { 
+                id: 9, 
+                name: "Nhoque de Mandioquinha Fit", 
+                price: 29.90, 
+                img: "https://res.cloudinary.com/dzcaxmbjn/image/upload/v1768663006/59b5a8d4-1fe1-4d1f-9991-5c73baaa5577.png", // Substitua esta URL
+                category: "massas", 
+                badge: "Artesanal" 
+            },
+
+            // SALGADOS
+            { 
+                id: 10, 
+                name: "Kibe de Queijo Assado", 
+                price: 24.90, 
+                img: "https://res.cloudinary.com/dzcaxmbjn/image/upload/v1768663049/c449095d-8d72-4913-a15a-3944499dc37e.png", // Substitua esta URL
+                category: "salgados", 
+                badge: "Lanche Fit" 
+            }
+        ];
+
+        // --- STATE ---
+        let cart = []; // Agora armazena objetos: { name, price, img, category }
+        const TARGET_ITEMS = 7;
+        let isBarMinimized = false;
+        let slideIndex = 0; // Para o slider
+
+        // --- FAKE SOCIAL PROOF DATA ---
+        const buyers = [
+            { name: "Julia M.", item: "Kit Low Carb 7 Dias", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&w=100&q=80" },
+            { name: "Pedro S.", item: "5x Frango c/ Batata", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&w=100&q=80" },
+            { name: "Marcela V.", item: "Kit Vegetariano", img: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&w=100&q=80" },
+            { name: "Lucas R.", item: "10 Marmitas Fit", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&w=100&q=80" }
+        ];
+
+        // --- RENDER ---
+        function renderProducts(filter = 'todos') {
+            const grid = document.getElementById('products-grid');
+            grid.innerHTML = '';
+            
+            // Lógica de filtro mais flexível para a demo
+            const filtered = filter === 'todos' 
+                ? products 
+                : products.filter(p => {
+                    if (filter === 'vr') return p.category === 'vr' || p.category === 'marmitas';
+                    if (filter === 'lowcarb') return p.category === 'lowcarb' || p.category === 'marmitas';
+                    return p.category === filter;
+                });
+
+            filtered.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                // Adicionei o 4º parametro (img) no onclick do botão
+                card.innerHTML = `
+                    <div class="card-img-wrap">
+                        <img src="${p.img}" class="card-img" alt="${p.name}">
+                        <div class="badges-container">
+                            <span class="badge">${p.badge}</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-title">${p.name}</div>
+                        <div class="card-footer">
+                            <span class="price">R$ ${p.price.toFixed(2).replace('.',',')}</span>
+                            <button class="btn-add" onclick="addToCart('${p.name}', ${p.price}, '${p.category}', '${p.img}')">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // --- LOGIC ---
+        function addToCart(name, price, category, img) {
+            // Agora adicionamos o objeto completo com a imagem
+            cart.push({ name, price, category, img });
+            
+            if(isBarMinimized) {
+                toggleBar(); 
+            }
+            
+            updateGamification();
+            renderMiniCart(); // Atualiza a lista horizontal
+            showUserToast(name);
+
+            // Se for Kit, mostra o modal
+            if (category === 'kits') {
+                document.getElementById('kit-modal-overlay').style.display = 'flex';
+            }
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateGamification();
+            renderMiniCart();
+        }
+
+        function renderMiniCart() {
+            const container = document.getElementById('cart-items-scroll');
+            container.innerHTML = '';
+
+            cart.forEach((item, index) => {
+                const el = document.createElement('div');
+                el.className = 'mini-cart-item';
+                el.innerHTML = `
+                    <div class="mini-cart-remove" onclick="removeFromCart(${index})">
+                        <i class="fa-solid fa-xmark"></i>
+                    </div>
+                    <img src="${item.img}" class="mini-cart-img">
+                    <span class="mini-item-name">${item.name}</span>
+                    <span class="mini-cart-price">R$ ${item.price.toFixed(2).replace('.',',')}</span>
+                `;
+                container.appendChild(el);
+            });
+        }
+
+        function showUserToast(name) {
+            const toast = document.getElementById('user-action-toast');
+            const msg = document.getElementById('user-toast-msg');
+            msg.textContent = `${name} adicionado!`;
+            toast.classList.add('visible');
+            setTimeout(() => {
+                toast.classList.remove('visible');
+            }, 3000);
+        }
+
+        function closeKitModal(goToCart) {
+            document.getElementById('kit-modal-overlay').style.display = 'none';
+            if (goToCart) {
+                // Simula ir pro carrinho abrindo a barra de gamificação
+                const bar = document.getElementById('game-bar');
+                if (!bar.classList.contains('visible')) {
+                    toggleBar();
+                }
+                // Scroll para o fim onde está a barra
+                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            }
+        }
+
+        function updateGamification() {
+            const count = cart.length;
+            // Somar preços do array de objetos
+            const total = cart.reduce((acc, item) => acc + item.price, 0);
+            
+            document.getElementById('cart-count').textContent = count;
+            document.getElementById('kit-total').textContent = `R$ ${total.toFixed(2).replace('.',',')}`;
+            document.getElementById('kit-status').textContent = `Kit Semanal (${Math.min(count, TARGET_ITEMS)}/${TARGET_ITEMS})`;
+
+            const bar = document.getElementById('game-bar');
+            
+            if (count > 0 && !bar.classList.contains('visible') && !isBarMinimized) {
+                bar.classList.add('visible');
+                adjustFabPosition(true);
+            }
+
+            const percentage = Math.min((count / TARGET_ITEMS) * 100, 100);
+            const fill = document.getElementById('progress-fill');
+            fill.style.width = `${percentage}%`;
+
+            const promoText = document.getElementById('promo-text');
+            const checkoutBtn = document.getElementById('btn-checkout');
+
+            if (count >= TARGET_ITEMS) {
+                fill.style.background = '#00c853'; 
+                promoText.style.display = 'none';
+                checkoutBtn.style.display = 'block';
+                bar.style.borderTop = '4px solid #00c853';
+            } else {
+                const missing = TARGET_ITEMS - count;
+                promoText.innerHTML = `Faltam <strong>${missing} marmitas</strong> para ativar o Frete Grátis!`;
+                promoText.style.display = 'block';
+                checkoutBtn.style.display = 'none';
+                fill.style.background = 'var(--primary)';
+                bar.style.borderTop = 'none';
+            }
+        }
+
+        function toggleBar() {
+            const bar = document.getElementById('game-bar');
+            const icon = document.getElementById('bar-icon');
+            
+            if (isBarMinimized) {
+                bar.classList.remove('minimized');
+                bar.classList.add('visible');
+                icon.className = 'fa-solid fa-chevron-down';
+                isBarMinimized = false;
+                adjustFabPosition(true);
+            } else {
+                bar.classList.add('minimized');
+                icon.className = 'fa-solid fa-chevron-up';
+                isBarMinimized = true;
+                adjustFabPosition(false);
+            }
+        }
+
+        function toggleMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        function toggleSearch() {
+            const searchBar = document.getElementById('search-bar');
+            searchBar.classList.toggle('active');
+            if (searchBar.classList.contains('active')) {
+                searchBar.querySelector('input').focus();
+            }
+        }
+
+        function adjustFabPosition(barIsUp) {
+            const fab = document.querySelector('.nutri-fab');
+            if (barIsUp) {
+                fab.style.bottom = 'calc(var(--nav-height) + 140px)';
+            } else {
+                fab.style.bottom = 'calc(var(--nav-height) + 20px)';
+            }
+        }
+
+        function filterItems(category, element) {
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            element.classList.add('active');
+            renderProducts(category);
+        }
+
+        function scrollFilters(direction) {
+            const container = document.getElementById('filters-container');
+            const scrollAmount = 200; // Pixels to scroll
+            container.scrollBy({
+                left: direction * scrollAmount,
+                behavior: 'smooth'
+            });
+        }
+
+        function scrollKits(direction) {
+            const container = document.getElementById('kits-container');
+            const scrollAmount = 300; // Card width + gap
+            container.scrollBy({
+                left: direction * scrollAmount,
+                behavior: 'smooth'
+            });
+        }
+
+        function toggleFaq(button) {
+            const item = button.parentElement;
+            item.classList.toggle('active');
+        }
+
+        function toggleChat() {
+            const modal = document.getElementById('chat-modal');
+            modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function scrollToGrid() {
+            document.getElementById('products-grid').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // --- SLIDER LOGIC ---
+        function changeSlide(n) {
+            const slides = document.querySelectorAll('.slide');
+            slides[slideIndex].classList.remove('active');
+            
+            slideIndex += n;
+            
+            if (slideIndex >= slides.length) {
+                slideIndex = 0;
+            }
+            if (slideIndex < 0) {
+                slideIndex = slides.length - 1;
+            }
+            
+            slides[slideIndex].classList.add('active');
+        }
+
+        // --- URGENCY & SOCIAL LOGIC ---
+        function startCountdown() {
+            const display = document.getElementById('countdown');
+            if (!display) return;
+
+            let h = 2, m = 14, s = 5; 
+            
+            setInterval(() => {
+                s--;
+                if (s < 0) { s = 59; m--; }
+                if (m < 0) { m = 59; h--; }
+                if (h < 0) h = 0; 
+                
+                const f = (n) => n.toString().padStart(2, '0');
+                display.textContent = `${f(h)}:${f(m)}:${f(s)}`;
+            }, 1000);
+        }
+
+        function startSocialProof() {
+            const toast = document.getElementById('social-toast');
+            const img = document.getElementById('toast-img');
+            const msg = document.getElementById('toast-msg');
+
+            setInterval(() => {
+                const randomBuyer = buyers[Math.floor(Math.random() * buyers.length)];
+                img.src = randomBuyer.img;
+                msg.innerHTML = `<strong>${randomBuyer.name}</strong> comprou<br>${randomBuyer.item}`;
+                toast.classList.add('visible');
+                setTimeout(() => { toast.classList.remove('visible'); }, 4000);
+            }, 12000); 
+        }
+
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+
+        window.onload = () => {
+            renderProducts();
+            startCountdown();
+            setTimeout(startSocialProof, 3000); 
+            // Inicia o slider automático a cada 5 segundos
+            setInterval(() => {
+                changeSlide(1);
+            }, 5000);
+        };
+
+    </script>
+</body>
+</html>
